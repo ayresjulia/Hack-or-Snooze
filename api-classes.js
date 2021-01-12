@@ -67,7 +67,9 @@ class StoryList {
 
 	async removeStory(user, storyId) {
 		await axios.delete(`${BASE_URL}/stories/${storyId}`, {
-			token: user.loginToken
+			data: {
+				token: user.loginToken
+			}
 		});
 
 		// filter out the story whose ID we are removing
@@ -113,7 +115,9 @@ class User {
 				name
 			}
 		});
-
+		if (!response.data || !response.data.user) {
+			throw new Error('No user structure');
+		}
 		// build a new User instance from the API response
 		const newUser = new User(response.data.user);
 
@@ -239,32 +243,10 @@ class User {
 		return this;
 	}
 
-	/**
-	 * Send a PATCH request to the API in order to update the user
-	 * - userData: the user properties you want to update
-	 */
-
-	async update(userData) {
-		const response = await axios.patch(`${BASE_URL}/users/${this.username}`, {
-			user: userData,
-			token: this.loginToken
-		});
-		// "name" is really the only property you can update
-		this.name = response.data.user.name;
-
-		// Note: you can also update "password" but we're not storing it
-		return this;
-	}
-
-	/**
-	 * Send a DELETE request to the API in order to remove the user
-	 */
-
-	async remove() {
-		// this function is really just a wrapper around axios
-		const response = await axios.delete(`${BASE_URL}/users/${this.username}`, {
-			token: this.loginToken
-		});
+	isFavorite(story) {
+		let favStoryIds = new Set();
+		favStoryIds = new Set(this.favorites.map(obj => obj.storyId));
+		return favStoryIds.has(story.storyId);
 	}
 }
 
